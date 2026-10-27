@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SSD</title>
+<style>
+body{margin:0;padding:16px;background:#0b1220;color:#e6edf7;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+#q{width:100%;max-width:420px;box-sizing:border-box;padding:10px;margin-bottom:20px;background:#111b30;color:inherit;border:1px solid #243452;border-radius:6px;font:inherit}
+#board{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
+.note{padding:14px;min-height:140px;max-height:220px;overflow:hidden;color:#1f2430;box-shadow:2px 4px 10px rgba(0,0,0,.45);cursor:pointer;transform:rotate(var(--r));transition:transform .15s}
+.note:hover,.note.open{transform:rotate(0) scale(1.02)}
+.note.open{max-height:none}
+.note h3{margin:0 0 8px;font-size:15px}
+.note div{font-size:13px;white-space:pre-wrap;line-height:1.5}
+.note .meta{font-size:11px;opacity:.65;margin-top:8px}
+.c0{background:#fff3a3}.c1{background:#ffc9d4}.c2{background:#b8e8ff}.c3{background:#c6f2b8}.c4{background:#ffd9a8}
+</style>
+</head>
+<body>
+<input id="q" placeholder="검색">
+<div id="board"></div>
+<script>
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let notes=[];
+const render=()=>{
+  const q=document.getElementById('q').value.toLowerCase();
+  const list=notes.filter(n=>(n.title+n.body).toLowerCase().includes(q));
+  document.getElementById('board').innerHTML=list.length?list.map(n=>
+    `<div class="note c${n.number%5}" style="--r:${n.number%5-2}deg">
+      <h3>${esc(n.title.replace(/^질문:\s*/,''))}</h3>
+      <div>${esc(n.body).replace(/^## (.*)$/gm,'<b>$1</b>')}</div>
+      <div class="meta">${n.createdAt.slice(0,10)} ${n.labels.map(l=>'#'+esc(l.name)).join(' ')}</div>
+    </div>`).join(''):'<p>메모가 없어요</p>';
+};
+document.getElementById('board').onclick=e=>{const el=e.target.closest('.note');if(el)el.classList.toggle('open')};
+document.getElementById('q').oninput=render;
+fetch('notes.json').then(r=>r.json()).then(d=>{notes=d.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));render();});
+</script>
+</body>
+</html>
